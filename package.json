@@ -21,6 +21,7 @@
   "build": {
     "appId": "com.jadelume.videosegmentannotator",
     "productName": "Video Segment Annotator",
+    "publish": "never",
     "asar": true,
     "files": [
       "src/**/*",
