@@ -10,9 +10,9 @@
     "start": "electron .",
     "test": "node --test",
     "pack:mac": "electron-builder --mac dir",
-    "dist:mac": "electron-builder --mac dmg zip",
-    "dist:win": "electron-builder --win nsis portable",
-    "dist:all": "electron-builder --mac dmg zip --win nsis portable"
+    "dist:mac": "electron-builder --mac dmg zip --publish never",
+    "dist:win": "electron-builder --win nsis portable --publish never",
+    "dist:all": "electron-builder --mac dmg zip --win nsis portable --publish never"
   },
   "devDependencies": {
     "electron": "43.4.0",
@@ -21,7 +21,6 @@
   "build": {
     "appId": "com.jadelume.videosegmentannotator",
     "productName": "Video Segment Annotator",
-    "publish": "never",
     "asar": true,
     "files": [
       "src/**/*",
