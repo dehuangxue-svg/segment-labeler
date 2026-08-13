@@ -1,0 +1,57 @@
+{
+  "name": "segment-labeler",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Jadelume",
+  "license": "MIT",
+  "description": "Open-source desktop tool for cutting and labeling video training samples",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "pack:mac": "electron-builder --mac dir",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:all": "electron-builder --mac dmg zip --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "43.4.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.jadelume.segmentlabeler",
+    "productName": "Segment Labeler",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "schemas/**/*",
+      "examples/**/*",
+      "LICENSE",
+      "THIRD_PARTY.md",
+      "build/icon.png",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "build/icon.png",
+      "target": [
+        "dir",
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

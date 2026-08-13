@@ -1,0 +1,46 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { buildManifest, clipRelativePath } = require("../src/export-schema");
+
+const labels = [
+  { id: "target_action", name: "Target action", polarity: "positive" },
+  { id: "invalid_scene", name: "Invalid scene", polarity: "negative" },
+];
+
+test("builds temporal classification annotations with seconds and frames", () => {
+  const manifest = buildManifest({
+    sourcePath: "/tmp/live.mp4",
+    metadata: { width: 1080, height: 1920, fps: 30, duration: 120, videoCodec: "h264", audioCodec: "aac" },
+    labels,
+    segments: [{ id: "x", start: 1.25, end: 4.5, labelId: "target_action", note: "example" }],
+    clipPaths: ["videos/positive/Target_action/00001.mp4"],
+    exportedAt: "2026-08-12T00:00:00.000Z",
+  });
+  assert.equal(manifest.dataset_type, "temporal_video_classification");
+  assert.equal(manifest.task, "video_segment_classification");
+  assert.equal(manifest.annotations[0].sample_type, "positive");
+  assert.equal(manifest.annotations[0].class_id, "target_action");
+  assert.equal(manifest.annotations[0].class_name, "Target action");
+  assert.equal(manifest.annotations[0].start_frame, 38);
+  assert.equal(manifest.annotations[0].end_frame, 135);
+  assert.equal(manifest.annotations[0].duration_sec, 3.25);
+});
+
+test("places clips in polarity and class folders", () => {
+  const result = clipRelativePath(2, labels[1], "/tmp/My Live.mp4");
+  assert.match(result, /videos/);
+  assert.match(result, /negative/);
+  assert.match(result, /Invalid_scene/);
+  assert.match(result, /00003_My_Live_Invalid_scene\.mp4$/);
+});
+
+test("rejects unlabeled segments", () => {
+  assert.throws(() => buildManifest({
+    sourcePath: "/tmp/live.mp4",
+    metadata: { fps: 30 },
+    labels,
+    segments: [{ start: 0, end: 1, labelId: null }],
+    clipPaths: ["x.mp4"],
+    exportedAt: "now",
+  }), /not labeled/);
+});

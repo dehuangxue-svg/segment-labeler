@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src 'self' segment-labeler-media: file: blob:; img-src 'self' data:; style-src 'self'; script-src 'self'" />
+    <title>Segment Labeler</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-mark" src="../build/icon.png" alt="" />
+          <div>
+            <strong data-i18n="app.name">Segment Labeler</strong>
+            <span id="file-name">No video open</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <label class="language-control" data-i18n-title="language.label">
+            <span aria-hidden="true">文</span>
+            <select id="language-select" data-i18n-aria-label="language.label">
+              <option value="en">English</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="zh-TW">繁體中文</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="es">Español</option>
+            </select>
+          </label>
+          <button id="open-project" class="button secondary" data-i18n="action.openProject">Open Project</button>
+          <button id="open-video" class="button secondary" data-i18n="action.openVideo">Open Video</button>
+          <span id="save-status" class="save-status">Not saved</span>
+          <button id="save-project" class="button secondary" data-i18n="action.save" data-i18n-title="action.save" disabled>Save Progress</button>
+          <button id="undo" class="icon-button" data-i18n-title="action.undo" disabled>↶</button>
+          <button id="redo" class="icon-button" data-i18n-title="action.redo" disabled>↷</button>
+          <button id="export" class="button primary" data-i18n="action.export" disabled>Export Dataset</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="viewer-panel">
+          <div id="drop-zone" class="video-stage empty">
+            <div id="video-frame" class="video-frame">
+              <video id="video" preload="auto" data-i18n-title="video.clickPlay"></video>
+            </div>
+            <span id="video-format" class="video-format hidden"></span>
+            <div id="empty-state" class="empty-state">
+              <div class="empty-icon">＋</div>
+              <strong data-i18n="video.openPrompt">Open a video</strong>
+              <span data-i18n="video.formats">MP4, MOV, MKV, WebM and M4V</span>
+            </div>
+            <div id="cut-flash" class="cut-flash" data-i18n="video.cutFlash">Segment split</div>
+          </div>
+
+          <div class="transport">
+            <button id="jump-back" class="icon-button" data-i18n-title="action.backSecond">−1</button>
+            <button id="play-toggle" class="play-button" data-i18n-title="action.playPause" disabled>▶</button>
+            <button id="jump-forward" class="icon-button" data-i18n-title="action.forwardSecond">+1</button>
+            <span id="time-display" class="time-display">00:00:00.000 / 00:00:00.000</span>
+            <div class="speed-control">
+              <label for="speed" data-i18n="transport.speed">Speed</label>
+              <input id="speed" type="range" min="0.25" max="10" step="0.01" value="1" disabled />
+              <output id="speed-value">1.00×</output>
+              <button id="speed-reset" class="mini-button" data-i18n-title="action.resetSpeed">1×</button>
+            </div>
+          </div>
+
+          <div class="timeline-panel">
+            <div class="timeline-toolbar">
+              <div>
+                <span class="keycap">Space</span>
+                <span data-i18n="timeline.insertCut">Insert a cut at the playhead</span>
+              </div>
+              <label class="switch-row" data-i18n-title="timeline.pauseAfterCutTitle">
+                <input id="pause-on-cut" type="checkbox" />
+                <span class="switch" aria-hidden="true"></span>
+                <span data-i18n="timeline.pauseAfterCut">Pause after cut</span>
+              </label>
+              <div id="selection-summary" data-i18n="timeline.noneSelected">No segment selected</div>
+            </div>
+            <div id="timeline" class="timeline" data-i18n-aria-label="timeline.aria" data-i18n-title="timeline.help">
+              <div id="timeline-ruler" class="timeline-ruler" aria-hidden="true"></div>
+              <div id="segments-track" class="segments-track"></div>
+              <div id="cut-markers" class="cut-markers"></div>
+              <div id="range-selection" class="range-selection hidden"></div>
+              <div id="range-action" class="range-action hidden">
+                <button id="clear-range-cuts" type="button" data-i18n="action.clearCuts">Clear Cuts</button>
+              </div>
+              <div id="cut-adjust-tooltip" class="cut-adjust-tooltip hidden"></div>
+              <div id="playhead" class="playhead"></div>
+            </div>
+            <div class="timeline-actions">
+              <div class="cut-actions">
+                <button id="remove-cut" class="button danger-ghost" data-i18n="action.removeLeftCut" disabled>Delete Left Cut</button>
+                <button id="move-cut-to-playhead" class="button secondary" data-i18n="action.moveCut" disabled>Move to Playhead</button>
+              </div>
+              <div class="timeline-zoom" data-i18n-title="timeline.zoomTitle">
+                <span><span data-i18n="timeline.zoom">Timeline</span> <strong id="timeline-zoom-value">1.0×</strong></span>
+                <button id="timeline-zoom-reset" class="mini-button" type="button" data-i18n-title="action.resetTimeline" disabled>1×</button>
+              </div>
+              <span id="timeline-status" data-i18n="timeline.ready">Open a video, then press Space to split it</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="annotation-panel">
+          <section class="annotation-section labels-section">
+            <div class="section-title">
+              <h2 data-i18n="labels.title">Data Labels</h2>
+              <span id="labeled-count">0 / 0</span>
+            </div>
+            <div class="label-group positive-group">
+              <h3><span class="status-dot positive"></span><span data-i18n="labels.positive">Positive Samples</span></h3>
+              <div id="positive-labels" class="label-grid"></div>
+              <form id="positive-label-form" class="label-create-form" autocomplete="off">
+                <input id="positive-label-name" type="text" maxlength="30" data-i18n-placeholder="labels.namePlaceholder" required />
+                <input id="positive-label-id" type="text" maxlength="64" data-i18n-placeholder="labels.idPlaceholder" />
+                <button type="submit" class="label-add" data-i18n-title="action.addPositive">＋</button>
+              </form>
+            </div>
+            <div class="label-group negative-group">
+              <h3><span class="status-dot negative"></span><span data-i18n="labels.negative">Negative Samples</span></h3>
+              <div id="negative-labels" class="label-grid"></div>
+              <form id="negative-label-form" class="label-create-form" autocomplete="off">
+                <input id="negative-label-name" type="text" maxlength="30" data-i18n-placeholder="labels.namePlaceholder" required />
+                <input id="negative-label-id" type="text" maxlength="64" data-i18n-placeholder="labels.idPlaceholder" />
+                <button type="submit" class="label-add" data-i18n-title="action.addNegative">＋</button>
+              </form>
+            </div>
+          </section>
+
+          <section class="annotation-section selected-section">
+            <div class="section-title">
+              <h2 data-i18n="segment.current">Current Segment</h2>
+              <span id="selected-number">—</span>
+            </div>
+            <div id="selected-empty" class="selected-empty" data-i18n="segment.selectPrompt">Select a segment on the timeline</div>
+            <div id="selected-editor" class="selected-editor hidden">
+              <div class="time-range">
+                <div><span data-i18n="segment.start">Start</span><strong id="selected-start">—</strong></div>
+                <div><span data-i18n="segment.end">End</span><strong id="selected-end">—</strong></div>
+                <div><span data-i18n="segment.duration">Duration</span><strong id="selected-duration">—</strong></div>
+              </div>
+              <label class="note-field">
+                <span data-i18n="segment.note">Note</span>
+                <textarea id="segment-note" rows="2" data-i18n-placeholder="segment.notePlaceholder"></textarea>
+              </label>
+            </div>
+          </section>
+
+          <section class="annotation-section list-section">
+            <div class="section-title">
+              <h2 data-i18n="segment.list">Segments</h2>
+              <button id="unlabeled-next" class="mini-button" data-i18n="action.nextUnlabeled">Next Unlabeled</button>
+            </div>
+            <div id="segment-list" class="segment-list"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <div id="export-dialog" class="modal-backdrop hidden">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+        <h2 id="export-title" data-i18n="export.title">Export Training Data</h2>
+        <p data-i18n="export.description">Only labeled segments are exported.</p>
+        <label class="check-row">
+          <input id="precise-export" type="checkbox" />
+          <span><strong data-i18n="export.precise">Precise re-encoded cuts</strong><small data-i18n="export.preciseHint">More accurate boundaries, but slower</small></span>
+        </label>
+        <div id="export-progress" class="export-progress hidden">
+          <div class="progress-track"><div id="progress-bar"></div></div>
+          <span id="progress-text" data-i18n="export.preparing">Preparing export…</span>
+        </div>
+        <div class="modal-actions">
+          <button id="cancel-export" class="button secondary" data-i18n="action.cancel">Cancel</button>
+          <button id="confirm-export" class="button primary" data-i18n="action.chooseExport">Choose Folder and Export</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="drop-overlay" class="drop-overlay hidden">
+      <strong data-i18n="drop.open">Drop to open video</strong>
+      <span data-i18n="drop.restore">Saved annotations will be restored automatically</span>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="./locales/en.js"></script>
+    <script src="./locales/zh-CN.js"></script>
+    <script src="./locales/zh-TW.js"></script>
+    <script src="./locales/ja.js"></script>
+    <script src="./locales/ko.js"></script>
+    <script src="./locales/es.js"></script>
+    <script src="./i18n.js"></script>
+    <script src="./segment-model.js"></script>
+    <script src="./timeline-view.js"></script>
+    <script src="./renderer.js"></script>
+  </body>
+</html>
