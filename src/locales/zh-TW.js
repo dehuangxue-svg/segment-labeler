@@ -2,7 +2,7 @@
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales["zh-TW"] = {
     ...root.SegmentLabelerLocales["zh-CN"],
-    "app.name": "影片片段標註器", "app.noVideo": "尚未開啟影片",
+    "app.name": "影片切片標註器", "app.noVideo": "尚未開啟影片",
     "action.openProject": "開啟專案", "action.openVideo": "開啟影片", "action.save": "儲存進度",
     "action.undo": "復原 (⌘Z)", "action.redo": "重做 (⌘⇧Z)", "action.export": "匯出訓練集",
     "action.cancel": "取消", "action.chooseExport": "選擇資料夾並匯出", "action.clearCuts": "清除切點",

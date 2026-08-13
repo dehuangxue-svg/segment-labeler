@@ -2,7 +2,7 @@
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales.es = {
     ...root.SegmentLabelerLocales.en,
-    "app.name": "Etiquetador de segmentos", "app.noVideo": "No hay ningún vídeo abierto",
+    "app.name": "Anotador de segmentos de vídeo", "app.noVideo": "No hay ningún vídeo abierto",
     "action.openProject": "Abrir proyecto", "action.openVideo": "Abrir vídeo", "action.save": "Guardar progreso",
     "action.undo": "Deshacer (⌘Z)", "action.redo": "Rehacer (⌘⇧Z)", "action.export": "Exportar conjunto de datos",
     "action.cancel": "Cancelar", "action.chooseExport": "Elegir carpeta y exportar", "action.clearCuts": "Borrar cortes",

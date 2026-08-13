@@ -2,7 +2,7 @@
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales.ko = {
     ...root.SegmentLabelerLocales.en,
-    "app.name": "세그먼트 라벨러", "app.noVideo": "열린 동영상 없음",
+    "app.name": "동영상 구간 주석기", "app.noVideo": "열린 동영상 없음",
     "action.openProject": "프로젝트 열기", "action.openVideo": "동영상 열기", "action.save": "진행 상황 저장",
     "action.undo": "실행 취소 (⌘Z)", "action.redo": "다시 실행 (⌘⇧Z)", "action.export": "데이터셋 내보내기",
     "action.cancel": "취소", "action.chooseExport": "폴더 선택 후 내보내기", "action.clearCuts": "컷 지우기",

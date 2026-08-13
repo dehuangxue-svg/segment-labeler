@@ -1,7 +1,7 @@
 (function register(root) {
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales["zh-CN"] = {
-    "app.name": "视频片段标注器", "app.noVideo": "未打开视频",
+    "app.name": "视频切片标注器", "app.noVideo": "未打开视频",
     "action.openProject": "打开项目", "action.openVideo": "打开视频", "action.save": "保存进度",
     "action.undo": "撤回 (⌘Z)", "action.redo": "重做 (⌘⇧Z)", "action.export": "导出训练集",
     "action.cancel": "取消", "action.chooseExport": "选择文件夹并导出", "action.clearCuts": "清除切点",

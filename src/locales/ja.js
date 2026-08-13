@@ -2,7 +2,7 @@
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales.ja = {
     ...root.SegmentLabelerLocales.en,
-    "app.name": "セグメントラベラー", "app.noVideo": "動画が開かれていません",
+    "app.name": "動画セグメント注釈", "app.noVideo": "動画が開かれていません",
     "action.openProject": "プロジェクトを開く", "action.openVideo": "動画を開く", "action.save": "進捗を保存",
     "action.undo": "元に戻す (⌘Z)", "action.redo": "やり直す (⌘⇧Z)", "action.export": "データセットを書き出す",
     "action.cancel": "キャンセル", "action.chooseExport": "フォルダーを選んで書き出す", "action.clearCuts": "カットを消去",

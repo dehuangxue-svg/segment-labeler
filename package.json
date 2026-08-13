@@ -1,10 +1,10 @@
 {
   "name": "segment-labeler",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "author": "Jadelume",
   "license": "MIT",
-  "description": "Open-source desktop tool for cutting and labeling video training samples",
+  "description": "Open-source desktop app for video slicing, temporal annotation, and training dataset export",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -19,8 +19,8 @@
     "electron-builder": "26.15.3"
   },
   "build": {
-    "appId": "com.jadelume.segmentlabeler",
-    "productName": "Segment Labeler",
+    "appId": "com.jadelume.videosegmentannotator",
+    "productName": "Video Segment Annotator",
     "asar": true,
     "files": [
       "src/**/*",

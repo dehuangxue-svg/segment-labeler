@@ -1,4 +1,4 @@
-# Third-party references
+# Third-party references and acknowledgements
 
 The interaction model was informed by these open-source projects. No source
 code was copied into this repository.
@@ -11,5 +11,13 @@ code was copied into this repository.
 - [Subtitle Edit](https://github.com/SubtitleEdit/subtitleedit), MIT: an
   English source locale with independently maintained language resources.
 - [FFmpeg](https://github.com/FFmpeg/FFmpeg): media probing and clip export.
+
+## Thanks
+
+Thank you to the maintainers and contributors of these open-source projects.
+Their publicly shared ideas and tools made this independent implementation
+possible. We also thank [OpenAI](https://openai.com/) for development
+assistance during the creation of Video Segment Annotator. This project is not
+affiliated with the referenced projects or organizations.
 
 This application is an independent implementation under the MIT license.

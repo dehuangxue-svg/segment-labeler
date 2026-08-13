@@ -1,7 +1,7 @@
 (function register(root) {
   root.SegmentLabelerLocales ||= {};
   root.SegmentLabelerLocales.en = {
-    "app.name": "Segment Labeler",
+    "app.name": "Video Segment Annotator",
     "app.noVideo": "No video open",
     "action.openProject": "Open Project",
     "action.openVideo": "Open Video",

@@ -1,8 +1,17 @@
-# Segment Labeler
+# Video Segment Annotator
 
-Segment Labeler is an open-source desktop application for splitting videos into temporal segments, assigning positive or negative class labels, and exporting a training-ready dataset. Processing stays on your computer.
+**Video Segment Annotator** is an open-source desktop application for turning a long video into labeled training samples. It lets you set precise cut points, review every time range, assign positive or negative classes, and export both video clips and machine-readable annotations. All video processing and project data stay on your own computer.
 
 中文说明见下方。
+
+This project is a general-purpose video slicing and annotation tool: it deliberately starts with no preset labels, so it can be used for product footage, activity recognition, quality review, research, or any other temporal video-classification workflow.
+
+## What it does
+
+1. Open a local video and divide it into time segments using the keyboard or timeline.
+2. Fine-tune each boundary without losing its neighboring segment labels.
+3. Define your own positive and negative classes, then annotate every usable segment.
+4. Export individual clips, `annotations.json`, and `label_map.json` in a stable, training-oriented structure.
 
 ## Features
 
@@ -63,7 +72,9 @@ GitHub Actions builds both platforms natively on every push to `main`, release t
 
 ## 中文说明
 
-Segment Labeler 是一个通用的本地视频分段与训练样本标注工具。开源版不预设任何正负样本内容，用户可以自行新增和删除类别。
+**视频切片标注器** 是一个通用的本地视频切片、时间段标注与训练样本导出工具。它用于把长视频切成有明确时间边界的片段，再为每段添加正样本或负样本类别，最后导出视频片段和可供本地模型训练使用的 JSON 标注数据。
+
+开源版不预设任何正负样本内容，用户可以自行新增、删除和命名类别。因此它可以用于商品视频、行为识别、质检、研究或任何时序视频分类场景。
 
 - 支持英语、简体中文、繁体中文、日语、韩语和西班牙语，并会记住语言设置。
 - 支持 macOS 和 Windows；Windows 同时提供安装版和便携版。
@@ -77,3 +88,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). English is the source locale; new langua
 ## License
 
 [MIT](LICENSE)
+
+## Acknowledgements
+
+Video Segment Annotator is an independent MIT-licensed implementation. Its local video-annotation workflow was informed by [X-AnyLabeling](https://github.com/CVHub520/X-AnyLabeling); its FFmpeg-based export approach and localization practices were informed by [LosslessCut](https://github.com/mifi/lossless-cut) and [Subtitle Edit](https://github.com/SubtitleEdit/subtitleedit). Media probing and export rely on [FFmpeg](https://ffmpeg.org/).
+
+Thank you to these open-source projects and their maintainers for sharing their work. We also thank [OpenAI](https://openai.com/) for the development assistance that helped turn the workflow into this open-source application. This project is independent and is not affiliated with those projects or organizations.
