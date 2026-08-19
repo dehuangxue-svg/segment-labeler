@@ -19,19 +19,22 @@ test("space cut splits a segment and selects the completed left side", () => {
   assert.equal(result.selectedId, result.segments[0].id);
 });
 
-test("split preserves an existing label on both resulting parts", () => {
-  const initial = model.createInitial(100).map((segment) => ({ ...segment, labelId: "earring" }));
+test("split preserves existing labels on both resulting parts", () => {
+  const initial = model.createInitial(100).map((segment) => ({ ...segment, labelIds: ["earring", "closeup"] }));
   const result = model.splitAt(initial, 50);
-  assert.deepEqual(result.segments.map((segment) => segment.labelId), ["earring", "earring"]);
+  assert.deepEqual(result.segments.map((segment) => segment.labelIds), [
+    ["earring", "closeup"],
+    ["earring", "closeup"],
+  ]);
 });
 
 test("removing a cut clears conflicting labels", () => {
   let segments = model.splitAt(model.createInitial(100), 50).segments;
-  segments[0].labelId = "earring";
-  segments[1].labelId = "necklace";
+  segments[0].labelIds = ["earring", "closeup"];
+  segments[1].labelIds = ["necklace", "closeup"];
   const result = model.removeCutBefore(segments, segments[1].id);
   assert.equal(result.segments.length, 1);
-  assert.equal(result.segments[0].labelId, null);
+  assert.deepEqual(result.segments[0].labelIds, []);
 });
 
 test("does not create near-zero segments", () => {
@@ -56,11 +59,11 @@ test("removes every cut inside a boxed time range", () => {
 
 test("boxed cut removal clears conflicting labels on the merged segment", () => {
   let segments = model.splitAt(model.createInitial(100), 50).segments;
-  segments[0].labelId = "earring";
-  segments[1].labelId = "necklace";
+  segments[0].labelIds = ["earring"];
+  segments[1].labelIds = ["necklace"];
   const result = model.removeCutsInRange(segments, 49, 51);
   assert.equal(result.segments.length, 1);
-  assert.equal(result.segments[0].labelId, null);
+  assert.deepEqual(result.segments[0].labelIds, []);
 });
 
 test("boxed cut removal is unchanged when the range contains no cut", () => {
@@ -72,8 +75,8 @@ test("boxed cut removal is unchanged when the range contains no cut", () => {
 
 test("moves a cut while preserving both segment identities and labels", () => {
   const segments = model.splitAt(model.createInitial(100), 50).segments;
-  segments[0].labelId = "earring";
-  segments[1].labelId = "necklace";
+  segments[0].labelIds = ["earring", "closeup"];
+  segments[1].labelIds = ["necklace"];
   const ids = segments.map((segment) => segment.id);
   const result = model.moveCutBefore(segments, segments[1].id, 52.5);
   assert.equal(result.changed, true);
@@ -81,7 +84,23 @@ test("moves a cut while preserving both segment identities and labels", () => {
     [0, 52.5], [52.5, 100],
   ]);
   assert.deepEqual(result.segments.map((segment) => segment.id), ids);
-  assert.deepEqual(result.segments.map((segment) => segment.labelId), ["earring", "necklace"]);
+  assert.deepEqual(result.segments.map((segment) => segment.labelIds), [["earring", "closeup"], ["necklace"]]);
+});
+
+test("toggles multiple labels without replacing previous labels", () => {
+  const segment = model.createInitial(10)[0];
+  let result = model.assignLabel([segment], segment.id, "earring");
+  result = model.assignLabel(result.segments, segment.id, "closeup");
+  assert.deepEqual(result.segments[0].labelIds, ["earring", "closeup"]);
+  result = model.assignLabel(result.segments, segment.id, "earring");
+  assert.deepEqual(result.segments[0].labelIds, ["closeup"]);
+});
+
+test("migrates a legacy single label into labelIds", () => {
+  assert.deepEqual(model.normalizeSegment({ id: "x", labelId: "earring" }), {
+    id: "x",
+    labelIds: ["earring"],
+  });
 });
 
 test("does not move a cut across a neighboring boundary", () => {

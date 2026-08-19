@@ -129,6 +129,16 @@
                 <button type="submit" class="label-add" data-i18n-title="action.addNegative">＋</button>
               </form>
             </div>
+            <div class="label-group attribute-group">
+              <h3><span class="status-dot attribute"></span><span data-i18n="labels.attributes">Attributes</span></h3>
+              <div id="attribute-labels" class="label-grid"></div>
+              <form id="attribute-label-form" class="label-create-form" autocomplete="off">
+                <input id="attribute-label-name" type="text" maxlength="30" data-i18n-placeholder="labels.namePlaceholder" required />
+                <input id="attribute-label-id" type="text" maxlength="64" data-i18n-placeholder="labels.idPlaceholder" />
+                <button type="submit" class="label-add" data-i18n-title="action.addAttribute">＋</button>
+              </form>
+            </div>
+            <p class="multi-label-hint" data-i18n="labels.multiHint">Select multiple labels; click an active label again to remove it.</p>
           </section>
 
           <section class="annotation-section selected-section">

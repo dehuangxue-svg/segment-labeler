@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://local.example/video-segment-annotations.schema.json",
-  "title": "Video segment temporal classification dataset",
+  "$id": "https://local.example/video-segment-multilabel-annotations.schema.json",
+  "title": "Video segment temporal multi-label classification dataset",
   "type": "object",
   "required": ["schema_version", "dataset_type", "source", "label_map", "annotations"],
   "properties": {
-    "schema_version": { "const": "1.1.0" },
-    "dataset_type": { "const": "temporal_video_classification" },
-    "task": { "const": "video_segment_classification" },
+    "schema_version": { "const": "2.0.0" },
+    "dataset_type": { "const": "temporal_video_multilabel_classification" },
+    "task": { "const": "video_segment_multilabel_classification" },
     "time_unit": { "const": "seconds" },
     "source": {
       "type": "object",
@@ -24,11 +24,12 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "name", "sample_type"],
+        "required": ["id", "name", "role", "group_id"],
         "properties": {
           "id": { "type": "string" },
           "name": { "type": "string" },
-          "sample_type": { "enum": ["positive", "negative"] }
+          "role": { "enum": ["positive", "negative", "attribute"] },
+          "group_id": { "type": "string" }
         }
       }
     },
@@ -36,13 +37,41 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "clip_path", "sample_type", "class_id", "class_name", "start_sec", "end_sec", "duration_sec", "start_frame", "end_frame"],
+        "required": ["id", "clip_path", "sample_type", "class_id", "class_name", "label_ids", "labels", "labels_by_group", "start_sec", "end_sec", "duration_sec", "start_frame", "end_frame"],
         "properties": {
           "id": { "type": "string" },
           "clip_path": { "type": "string" },
           "sample_type": { "enum": ["positive", "negative"] },
           "class_id": { "type": "string" },
           "class_name": { "type": "string" },
+          "label_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string" }
+          },
+          "labels": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "role", "group_id"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "role": { "enum": ["positive", "negative", "attribute"] },
+                "group_id": { "type": "string" }
+              }
+            }
+          },
+          "labels_by_group": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string" }
+            }
+          },
           "start_sec": { "type": "number", "minimum": 0 },
           "end_sec": { "type": "number", "exclusiveMinimum": 0 },
           "duration_sec": { "type": "number", "exclusiveMinimum": 0 },

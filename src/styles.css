@@ -108,6 +108,7 @@ button { color: inherit; }
 .timeline-segment.unlabeled { background: repeating-linear-gradient(135deg, #3b4041 0, #3b4041 8px, #34393a 8px, #34393a 16px); }
 .timeline-segment.positive { background: #247b55; }
 .timeline-segment.negative { background: #9b4947; }
+.timeline-segment.attribute { background: #396a88; }
 .timeline-segment.selected { outline: 2px solid var(--amber); outline-offset: -2px; z-index: 2; }
 .timeline-segment span { display: block; padding: 7px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
 .cut-markers { position: absolute; inset: 39px 0 8px; pointer-events: none; z-index: 4; }
@@ -130,6 +131,7 @@ button { color: inherit; }
 
 .annotation-panel { min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); border-left: 1px solid var(--line); background: var(--surface); }
 .annotation-section { padding: 13px 14px; border-bottom: 1px solid var(--line); min-height: 0; }
+.labels-section { max-height: 50vh; overflow-y: auto; }
 .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .section-title h2 { margin: 0; font-size: 14px; }
 .section-title > span { color: var(--muted); font-size: 12px; }
@@ -138,6 +140,7 @@ button { color: inherit; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; }
 .status-dot.positive { background: var(--green); }
 .status-dot.negative { background: var(--red); }
+.status-dot.attribute { background: #63b3df; }
 .label-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .label-grid-empty { grid-column: 1 / -1; padding: 8px; border: 1px dashed #3f4746; border-radius: 4px; color: #78817f; font-size: 11px; text-align: center; }
 .label-item { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 26px; }
@@ -147,11 +150,13 @@ button { color: inherit; }
 .label-delete:hover { color: #ffaaa6; background: var(--red-soft); border-color: #76504e; }
 .label-button.positive:hover, .label-button.positive.active { background: var(--green-soft); border-color: var(--green); color: #baf1d4; }
 .label-button.negative:hover, .label-button.negative.active { background: var(--red-soft); border-color: var(--red); color: #ffd0ce; }
+.label-button.attribute:hover, .label-button.attribute.active { background: rgba(69, 143, 184, .2); border-color: #63b3df; color: #c7ebff; }
 .label-create-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) 31px; gap: 5px; margin-top: 7px; }
 .label-create-form input { min-width: 0; height: 30px; padding: 0 7px; border: 1px solid var(--line); border-radius: 4px; outline: none; background: #121516; color: var(--text); font-size: 11px; }
 .label-create-form input:focus { border-color: var(--blue); }
 .label-add { width: 31px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--amber); cursor: pointer; font-size: 18px; }
 .label-add:hover { background: var(--surface-3); border-color: #59615f; }
+.multi-label-hint { margin: 10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .selected-empty { height: 72px; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
 .hidden { display: none !important; }
 .time-range { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -175,6 +180,7 @@ button { color: inherit; }
 .segment-tag { max-width: 80px; padding: 3px 6px; border-radius: 3px; color: #dfe4e2; background: #363c3d; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .segment-tag.positive { background: var(--green-soft); color: #9ce6c0; }
 .segment-tag.negative { background: var(--red-soft); color: #ffc0bd; }
+.segment-tag.attribute { background: rgba(69, 143, 184, .2); color: #c7ebff; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(0, 0, 0, 0.66); }
 .modal { width: min(480px, calc(100vw - 40px)); padding: 20px; border: 1px solid #495150; border-radius: 7px; background: #202425; box-shadow: 0 22px 70px rgba(0,0,0,.5); }

@@ -10,7 +10,7 @@ This project is a general-purpose video slicing and annotation tool: it delibera
 
 1. Open a local video and divide it into time segments using the keyboard or timeline.
 2. Fine-tune each boundary without losing its neighboring segment labels.
-3. Define your own positive and negative classes, then annotate every usable segment.
+3. Define your own positive, negative, and attribute labels, then apply any number of labels to each segment.
 4. Export individual clips, `annotations.json`, and `label_map.json` in a stable, training-oriented structure.
 
 ## Features
@@ -21,7 +21,7 @@ This project is a general-purpose video slicing and annotation tool: it delibera
 - Seek on the upper timeline ruler and box-select cuts on the lower track.
 - Hold `Command` on macOS or `Ctrl` on Windows and scroll to zoom.
 - Use playback speeds from `0.25×` to `10.00×`.
-- Create and remove your own positive and negative labels. No domain labels are preset.
+- Create and remove your own positive, negative, and attribute labels. Labels are multi-select and no domain labels are preset.
 - Save progress automatically beside the source video as `<video>.vsl.json`.
 - Export clips plus `annotations.json` and `label_map.json` for local model training.
 - Switch the interface between English, Simplified Chinese, Traditional Chinese, Japanese, Korean, and Spanish.
@@ -49,7 +49,9 @@ source_video_dataset/
     └── negative/<class>/*.mp4
 ```
 
-`annotations.json` uses temporal video classification records with seconds, frames, polarity, class IDs, display names, notes, and relative clip paths. The JSON Schema is in `schemas/annotations.schema.json`.
+`annotations.json` uses temporal multi-label video classification records. Every record includes `label_ids`, complete label metadata, and `labels_by_group`, together with seconds, frames, notes, and the relative clip path. The legacy `class_id` and `class_name` fields remain as the primary decision label for older loaders. The JSON Schema is in `schemas/annotations.schema.json`.
+
+Positive and negative labels are decision labels: at least one is required before a segment can be exported. Attribute labels add independent facts such as camera view, motion, quality, or environment. If a segment contains any negative decision label, its `sample_type` is `negative`; otherwise a positive decision label makes it `positive`.
 
 ## Run locally
 
@@ -72,14 +74,14 @@ GitHub Actions builds both platforms natively on every push to `main`, release t
 
 ## 中文说明
 
-**视频切片标注器** 是一个通用的本地视频切片、时间段标注与训练样本导出工具。它用于把长视频切成有明确时间边界的片段，再为每段添加正样本或负样本类别，最后导出视频片段和可供本地模型训练使用的 JSON 标注数据。
+**视频切片标注器** 是一个通用的本地视频切片、时间段多标签标注与训练样本导出工具。它用于把长视频切成有明确时间边界的片段，再为每段同时添加一个或多个正样本、负样本及属性标签，最后导出视频片段和可供本地模型训练使用的 JSON 标注数据。
 
-开源版不预设任何正负样本内容，用户可以自行新增、删除和命名类别。因此它可以用于商品视频、行为识别、质检、研究或任何时序视频分类场景。
+开源版不预设任何标签内容，用户可以自行新增、删除和命名正样本、负样本与属性标签。因此它可以用于商品视频、行为识别、质检、研究或任何时序视频多标签分类场景。
 
 - 支持英语、简体中文、繁体中文、日语、韩语和西班牙语，并会记住语言设置。
 - 支持 macOS 和 Windows；Windows 同时提供安装版和便携版。
 - 视频、项目和标注数据都保留在本地，不会上传。
-- 导出的 JSON 可用于时序视频分类模型的数据加载与训练。
+- 导出的 JSON 同时提供 `label_ids`、完整标签信息、按组标签及兼容旧加载器的主类别字段，可用于时序视频多标签分类模型的数据加载与训练。
 
 ## Contributing
 

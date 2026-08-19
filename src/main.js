@@ -4,7 +4,12 @@ const fs = require("node:fs/promises");
 const fsSync = require("node:fs");
 const path = require("node:path");
 const { Readable } = require("node:stream");
-const { buildManifest, clipRelativePath } = require("./export-schema");
+const {
+  buildManifest,
+  clipRelativePath,
+  labelsForSegment,
+  sampleTypeForLabels,
+} = require("./export-schema");
 const { mediaType, requestedByteRange } = require("./media-utils");
 require("./locales/en");
 require("./locales/zh-CN");
@@ -254,7 +259,10 @@ ipcMain.handle("project:open", async () => {
 });
 
 ipcMain.handle("dataset:export", async (_event, payload) => {
-  const labeledSegments = payload.segments.filter((segment) => segment.labelId);
+  const labelById = new Map(payload.labels.map((label) => [label.id, label]));
+  const labeledSegments = payload.segments.filter((segment) => (
+    sampleTypeForLabels(labelsForSegment(segment, labelById))
+  ));
   if (!labeledSegments.length) throw new Error(mainText("main.noLabeled"));
 
   const parentResult = await dialog.showOpenDialog(mainWindow, {
@@ -266,9 +274,8 @@ ipcMain.handle("dataset:export", async (_event, payload) => {
 
   const sourceStem = path.parse(payload.sourcePath).name;
   const outputRoot = path.join(parentResult.filePaths[0], `${sourceStem}_dataset`);
-  const labelById = new Map(payload.labels.map((label) => [label.id, label]));
   const clipPaths = labeledSegments.map((segment, index) =>
-    clipRelativePath(index, labelById.get(segment.labelId), payload.sourcePath),
+    clipRelativePath(index, labelsForSegment(segment, labelById), payload.sourcePath),
   );
 
   for (let index = 0; index < labeledSegments.length; index += 1) {

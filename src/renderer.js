@@ -33,9 +33,10 @@ const ui = Object.fromEntries(
     "clear-range-cuts", "cut-adjust-tooltip", "playhead", "selection-summary", "pause-on-cut",
     "remove-cut", "move-cut-to-playhead",
     "timeline-zoom-value", "timeline-zoom-reset",
-    "timeline-status", "positive-labels", "negative-labels", "labeled-count",
+    "timeline-status", "positive-labels", "negative-labels", "attribute-labels", "labeled-count",
     "positive-label-form", "positive-label-name", "positive-label-id",
     "negative-label-form", "negative-label-name", "negative-label-id",
+    "attribute-label-form", "attribute-label-name", "attribute-label-id",
     "selected-number", "selected-empty", "selected-editor", "selected-start",
     "selected-end", "selected-duration", "segment-note", "segment-list",
     "unlabeled-next", "cut-flash", "export-dialog", "precise-export",
@@ -83,14 +84,45 @@ function syncLabelIndex() {
   labelById = new Map(state.labels.map((label) => [label.id, label]));
 }
 
+function normalizeLabel(label) {
+  const polarity = ["positive", "negative", "attribute"].includes(label.polarity)
+    ? label.polarity
+    : "attribute";
+  const groupId = label.groupId || (polarity === "negative"
+    ? "negative_reason"
+    : polarity === "attribute"
+      ? "attribute"
+      : "positive_class");
+  return { ...label, polarity, groupId };
+}
+
+function labelsOf(segment) {
+  return SegmentModel.labelIdsOf(segment).map((id) => labelById.get(id)).filter(Boolean);
+}
+
+function sampleTypeOf(segment) {
+  const labels = labelsOf(segment);
+  if (labels.some((label) => label.polarity === "negative")) return "negative";
+  if (labels.some((label) => label.polarity === "positive")) return "positive";
+  return labels.length ? "attribute" : "unlabeled";
+}
+
+function isExportable(segment) {
+  return ["positive", "negative"].includes(sampleTypeOf(segment));
+}
+
+function labelSummary(segment) {
+  return labelsOf(segment).map((label) => label.name).join(" · ");
+}
+
 function storedLabels() {
   try {
     const value = JSON.parse(localStorage.getItem("customLabels") || "null");
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) return value.map(normalizeLabel);
   } catch (_error) {
     // Ignore an invalid previous preference and use the defaults.
   }
-  return DEFAULT_LABELS.map((label) => ({ ...label }));
+  return DEFAULT_LABELS.map(normalizeLabel);
 }
 
 function persistLabels() {
@@ -118,10 +150,10 @@ function snapshot() {
 }
 
 function restore(value) {
-  state.labels = (value.labels || state.labels).map((label) => ({ ...label }));
+  state.labels = (value.labels || state.labels).map(normalizeLabel);
   syncLabelIndex();
   persistLabels();
-  state.segments = value.segments.map((segment) => ({ ...segment }));
+  state.segments = value.segments.map(SegmentModel.normalizeSegment);
   state.selectedId = value.selectedId;
   state.selectedCutId = value.selectedCutId || null;
   state.dirty = true;
@@ -211,8 +243,8 @@ function applyVideoDimensions() {
 }
 
 function renderLabels() {
-  for (const polarity of ["positive", "negative"]) {
-    const root = polarity === "positive" ? ui["positive-labels"] : ui["negative-labels"];
+  for (const polarity of ["positive", "negative", "attribute"]) {
+    const root = ui[`${polarity}-labels`];
     root.replaceChildren();
     const labels = state.labels.filter((label) => label.polarity === polarity);
     if (!labels.length) {
@@ -258,14 +290,15 @@ function renderTimeline() {
   state.segments.forEach((segment, index) => {
     const visible = TimelineView.visibleSegment(segment, viewWindow);
     if (!visible) return;
-    const label = labelById.get(segment.labelId);
+    const sampleType = sampleTypeOf(segment);
+    const summary = labelSummary(segment);
     const item = document.createElement("div");
-    item.className = `timeline-segment ${label?.polarity || "unlabeled"}${segment.id === state.selectedId ? " selected" : ""}`;
+    item.className = `timeline-segment ${sampleType}${segment.id === state.selectedId ? " selected" : ""}`;
     item.style.left = `${visible.left}%`;
     item.style.width = `${visible.width}%`;
-    item.title = `${index + 1}. ${formatTime(segment.start)} - ${formatTime(segment.end)}${label ? ` · ${label.name}` : ` · ${t("segment.unlabeled")}`}`;
+    item.title = `${index + 1}. ${formatTime(segment.start)} - ${formatTime(segment.end)} · ${summary || t("segment.unlabeled")}`;
     const text = document.createElement("span");
-    text.textContent = label?.name || `${index + 1}`;
+    text.textContent = summary || `${index + 1}`;
     item.append(text);
     ui["segments-track"].append(item);
   });
@@ -337,7 +370,8 @@ function positionRangeAction(range, viewWindow) {
 function renderSegmentList() {
   ui["segment-list"].replaceChildren();
   state.segments.forEach((segment, index) => {
-    const label = labelById.get(segment.labelId);
+    const sampleType = sampleTypeOf(segment);
+    const summary = labelSummary(segment);
     const row = document.createElement("div");
     row.className = `segment-row${segment.id === state.selectedId ? " selected" : ""}`;
     row.dataset.segmentId = segment.id;
@@ -347,15 +381,19 @@ function renderSegmentList() {
     const main = document.createElement("div");
     main.className = "segment-main";
     const name = document.createElement("strong");
-    name.textContent = label?.name || t("segment.unlabeled");
+    name.textContent = summary || t("segment.unlabeled");
     const timing = document.createElement("span");
     timing.textContent = `${formatTime(segment.start, false)} – ${formatTime(segment.end, false)} · ${formatTime(segment.end - segment.start, false)}`;
     main.append(name, timing);
     const tag = document.createElement("span");
-    tag.className = `segment-tag ${label?.polarity || ""}`;
-    tag.textContent = label
-      ? t(label.polarity === "positive" ? "segment.positiveShort" : "segment.negativeShort")
-      : t("segment.pending");
+    tag.className = `segment-tag ${sampleType === "unlabeled" ? "" : sampleType}`;
+    tag.textContent = sampleType === "positive"
+      ? t("segment.positiveShort")
+      : sampleType === "negative"
+        ? t("segment.negativeShort")
+        : sampleType === "attribute"
+          ? t("segment.attributeShort")
+          : t("segment.pending");
     row.append(number, main, tag);
     row.addEventListener("click", () => selectSegment(segment.id, true));
     ui["segment-list"].append(row);
@@ -365,7 +403,7 @@ function renderSegmentList() {
 function renderSelection() {
   const selected = state.segments.find((segment) => segment.id === state.selectedId);
   document.querySelectorAll(".label-button").forEach((button) => {
-    button.classList.toggle("active", selected?.labelId === button.dataset.labelId);
+    button.classList.toggle("active", SegmentModel.labelIdsOf(selected).includes(button.dataset.labelId));
     button.disabled = !selected;
   });
   if (!selected) {
@@ -377,7 +415,7 @@ function renderSelection() {
     return;
   }
   const index = state.segments.findIndex((segment) => segment.id === selected.id);
-  const label = labelById.get(selected.labelId);
+  const summary = labelSummary(selected);
   ui["selected-number"].textContent = `#${index + 1}`;
   ui["selected-empty"].classList.add("hidden");
   ui["selected-editor"].classList.remove("hidden");
@@ -385,13 +423,13 @@ function renderSelection() {
   ui["selected-end"].textContent = formatTime(selected.end);
   ui["selected-duration"].textContent = formatTime(selected.end - selected.start, false);
   if (document.activeElement !== ui["segment-note"]) ui["segment-note"].value = selected.note || "";
-  ui["selection-summary"].textContent = `#${index + 1} · ${label?.name || t("segment.unlabeled")} · ${formatTime(selected.end - selected.start, false)}`;
+  ui["selection-summary"].textContent = `#${index + 1} · ${summary || t("segment.unlabeled")} · ${formatTime(selected.end - selected.start, false)}`;
   ui["remove-cut"].disabled = index === 0;
 }
 
 function renderControls() {
   const ready = Boolean(state.metadata);
-  const labeled = state.segments.filter((segment) => segment.labelId).length;
+  const labeled = state.segments.filter(isExportable).length;
   ui["labeled-count"].textContent = `${labeled} / ${state.segments.length}`;
   ui["save-project"].disabled = !ready;
   ui.export.disabled = !ready || labeled === 0;
@@ -437,8 +475,8 @@ function commitLabelChange(labels, segments = state.segments) {
   state.undoStack.push(snapshot());
   if (state.undoStack.length > 200) state.undoStack.shift();
   state.redoStack = [];
-  state.labels = labels.map((label) => ({ ...label }));
-  state.segments = segments.map((segment) => ({ ...segment }));
+  state.labels = labels.map(normalizeLabel);
+  state.segments = segments.map(SegmentModel.normalizeSegment);
   syncLabelIndex();
   persistLabels();
   state.dirty = true;
@@ -469,21 +507,24 @@ function addLabel(polarity) {
     nameInput.focus();
     return;
   }
-  commitLabelChange([...state.labels, { id, name, polarity }]);
+  const groupId = polarity === "negative" ? "negative_reason" : polarity === "attribute" ? "attribute" : "positive_class";
+  commitLabelChange([...state.labels, { id, name, polarity, groupId }]);
   nameInput.value = "";
   idInput.value = "";
   nameInput.focus();
-  showToast(t("toast.labelAdded", { polarity: t(polarity === "positive" ? "toast.positive" : "toast.negative"), name }));
+  const roleKey = polarity === "positive" ? "toast.positive" : polarity === "negative" ? "toast.negative" : "toast.attribute";
+  showToast(t("toast.labelAdded", { polarity: t(roleKey), name }));
 }
 
 function deleteLabel(labelId) {
   const label = labelById.get(labelId);
   if (!label) return;
-  const affected = state.segments.filter((segment) => segment.labelId === labelId).length;
+  const affected = state.segments.filter((segment) => SegmentModel.labelIdsOf(segment).includes(labelId)).length;
   if (affected && !window.confirm(t("toast.labelDeleteConfirm", { name: label.name, count: affected }))) return;
-  const segments = state.segments.map((segment) => (
-    segment.labelId === labelId ? { ...segment, labelId: null } : segment
-  ));
+  const segments = state.segments.map((segment) => ({
+    ...SegmentModel.normalizeSegment(segment),
+    labelIds: SegmentModel.labelIdsOf(segment).filter((id) => id !== labelId),
+  }));
   commitLabelChange(state.labels.filter((item) => item.id !== labelId), segments);
   showToast(t("toast.labelDeleted", { name: label.name }));
 }
@@ -498,7 +539,10 @@ function assignSelected(labelId) {
   if (result.changed) {
     commit({ ...result, selectedId: state.selectedId });
     const label = labelById.get(labelId);
-    showToast(t("toast.annotated", { polarity: t(label.polarity === "positive" ? "toast.positive" : "toast.negative"), name: label.name }));
+    const selected = result.segments.find((segment) => segment.id === state.selectedId);
+    const active = SegmentModel.labelIdsOf(selected).includes(labelId);
+    const roleKey = label.polarity === "positive" ? "toast.positive" : label.polarity === "negative" ? "toast.negative" : "toast.attribute";
+    showToast(t(active ? "toast.annotated" : "toast.unlabeledOne", { polarity: t(roleKey), name: label.name }));
   }
 }
 
@@ -749,10 +793,12 @@ async function loadVideo(metadata, segments = null, workspace = {}, projectPath 
   state.loading = true;
   ui.video.pause();
   state.metadata = metadata;
-  state.labels = (Array.isArray(labels) ? labels : storedLabels()).map((label) => ({ ...label }));
+  state.labels = (Array.isArray(labels) ? labels : storedLabels()).map(normalizeLabel);
   syncLabelIndex();
   persistLabels();
-  state.segments = segments?.length ? segments : SegmentModel.createInitial(metadata.duration);
+  state.segments = segments?.length
+    ? segments.map(SegmentModel.normalizeSegment)
+    : SegmentModel.createInitial(metadata.duration);
   state.selectedId = state.segments.some((segment) => segment.id === workspace.selectedId)
     ? workspace.selectedId
     : state.segments[0]?.id || null;
@@ -814,7 +860,7 @@ async function openVideo() {
 
 function projectPayload() {
   return {
-    schemaVersion: "1.3.0",
+    schemaVersion: "2.0.0",
     app: "segment-labeler",
     sourcePath: state.metadata.path,
     metadata: state.metadata,
@@ -907,7 +953,7 @@ async function exportDataset() {
 function nextUnlabeled() {
   const selectedIndex = state.segments.findIndex((segment) => segment.id === state.selectedId);
   const ordered = [...state.segments.slice(selectedIndex + 1), ...state.segments.slice(0, selectedIndex + 1)];
-  const next = ordered.find((segment) => !segment.labelId);
+  const next = ordered.find((segment) => !isExportable(segment));
   if (next) selectSegment(next.id, true);
   else showToast(t("toast.allLabeled"));
 }
@@ -1098,6 +1144,10 @@ ui["positive-label-form"].addEventListener("submit", (event) => {
 ui["negative-label-form"].addEventListener("submit", (event) => {
   event.preventDefault();
   addLabel("negative");
+});
+ui["attribute-label-form"].addEventListener("submit", (event) => {
+  event.preventDefault();
+  addLabel("attribute");
 });
 ui["remove-cut"].addEventListener("click", removeSelectedLeftCut);
 ui["unlabeled-next"].addEventListener("click", nextUnlabeled);

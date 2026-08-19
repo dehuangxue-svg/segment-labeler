@@ -12,9 +12,29 @@
     return `seg_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   }
 
+  function labelIdsOf(segment) {
+    const values = Array.isArray(segment?.labelIds)
+      ? segment.labelIds
+      : segment?.labelId
+        ? [segment.labelId]
+        : [];
+    return [...new Set(values.filter((value) => typeof value === "string" && value))];
+  }
+
+  function normalizeSegment(segment) {
+    const { labelId: _legacyLabelId, ...rest } = segment;
+    return { ...rest, labelIds: labelIdsOf(segment) };
+  }
+
+  function sameLabels(left, right) {
+    const first = [...labelIdsOf(left)].sort();
+    const second = [...labelIdsOf(right)].sort();
+    return first.length === second.length && first.every((value, index) => value === second[index]);
+  }
+
   function createInitial(duration) {
     if (!Number.isFinite(duration) || duration <= 0) return [];
-    return [{ id: makeId(), start: 0, end: duration, labelId: null, note: "" }];
+    return [{ id: makeId(), start: 0, end: duration, labelIds: [], note: "" }];
   }
 
   function splitAt(segments, time) {
@@ -23,9 +43,9 @@
     );
     if (index < 0) return { segments, selectedId: null, changed: false };
 
-    const current = segments[index];
-    const left = { ...current, id: makeId(), end: time };
-    const right = { ...current, id: makeId(), start: time };
+    const current = normalizeSegment(segments[index]);
+    const left = { ...current, id: makeId(), end: time, labelIds: [...current.labelIds] };
+    const right = { ...current, id: makeId(), start: time, labelIds: [...current.labelIds] };
     const next = [...segments.slice(0, index), left, right, ...segments.slice(index + 1)];
     return { segments: next, selectedId: left.id, changed: true };
   }
@@ -33,13 +53,13 @@
   function removeCutBefore(segments, segmentId) {
     const index = segments.findIndex((segment) => segment.id === segmentId);
     if (index <= 0) return { segments, selectedId: segmentId, changed: false };
-    const previous = segments[index - 1];
-    const current = segments[index];
+    const previous = normalizeSegment(segments[index - 1]);
+    const current = normalizeSegment(segments[index]);
     const merged = {
       ...previous,
       id: makeId(),
       end: current.end,
-      labelId: previous.labelId === current.labelId ? previous.labelId : null,
+      labelIds: sameLabels(previous, current) ? [...previous.labelIds] : [],
       note: previous.note === current.note ? previous.note : "",
     };
     const next = [...segments.slice(0, index - 1), merged, ...segments.slice(index + 1)];
@@ -60,12 +80,12 @@
       return { segments, selectedId: null, changed: false, removedCount: 0 };
     }
 
-    const next = [{ ...segments[0] }];
+    const next = [normalizeSegment(segments[0])];
     let selectedId = null;
     for (let index = 1; index < segments.length; index += 1) {
-      const current = segments[index];
+      const current = normalizeSegment(segments[index]);
       if (!removable.has(index)) {
-        next.push({ ...current });
+        next.push(current);
         continue;
       }
       const previous = next[next.length - 1];
@@ -73,7 +93,7 @@
         ...previous,
         id: makeId(),
         end: current.end,
-        labelId: previous.labelId === current.labelId ? previous.labelId : null,
+        labelIds: sameLabels(previous, current) ? [...previous.labelIds] : [],
         note: previous.note === current.note ? previous.note : "",
       };
       next[next.length - 1] = merged;
@@ -108,9 +128,16 @@
   function assignLabel(segments, segmentId, labelId) {
     let changed = false;
     const next = segments.map((segment) => {
-      if (segment.id !== segmentId || segment.labelId === labelId) return segment;
+      if (segment.id !== segmentId) return segment;
+      const normalized = normalizeSegment(segment);
+      const selected = normalized.labelIds.includes(labelId);
       changed = true;
-      return { ...segment, labelId };
+      return {
+        ...normalized,
+        labelIds: selected
+          ? normalized.labelIds.filter((value) => value !== labelId)
+          : [...normalized.labelIds, labelId],
+      };
     });
     return { segments: next, changed };
   }
@@ -131,6 +158,8 @@
 
   return {
     EPSILON,
+    labelIdsOf,
+    normalizeSegment,
     createInitial,
     splitAt,
     removeCutBefore,
